@@ -25,3 +25,10 @@ exports/
 !.env.example
 .claude/settings.local.json
 .DS_Store
+
+# starter editor: footage, transcripts, cloned connectors
+raw/*
+!raw/.gitkeep
+vendor/*
+!vendor/.gitkeep
+transcript/words.json

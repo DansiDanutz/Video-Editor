@@ -13,3 +13,10 @@ Video editing workspace (GitHub: DansiDanutz/Video-Editor). Machine-wide rules i
 - Keep raw footage, renders and large media out of Git (see `.gitignore`). Commit sources, timelines, scripts and docs.
 - Check outputs with `ffprobe` (duration, streams, A/V sync) before calling a render done.
 - Conventional commits (`feat:`, `fix:`, ...). No secrets in the repo; use `.env` (gitignored).
+
+## Starter AI editor (from Jason Cooper's free Claude Video Editor blueprint)
+Layout: `raw/` input clip, `transcript/` words.json + cuts.json, `scripts/` our scripts, `vendor/` cloned connectors (gitignored).
+Flow: pick app -> connect -> WhisperX transcribe (venv `~/.cache/video-editor/whisperx-venv`, create once, never recreate; 3-5 GB, run `danslab-workflow check` first) -> write `transcript/cuts.json` -> user approves -> build cut as real trimmable clips (never one flat clip) -> verify frame counts vs cuts.json.
+Premiere connector: clone hetpatel-11/Adobe_Premiere_Pro_MCP at v1.2.3 (12684e3) into `vendor/premiere-mcp`; never `npm install -g adobe-premiere-pro-mcp`. Resolve Studio 21.1+: File > Setup AI Assistants. Final Cut: FCPXML. CapCut/no app: single ffmpeg filtergraph, `-fps_mode passthrough`.
+Not covered by the starter: audio polish, grade, graphics, SFX, music, locked-spec export.
+Machine status (2026-10-10): ffmpeg, uv, git, Node 26, Python 3.11 present; WhisperX env not yet created.
