@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "vercel@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "code-modernization@claude-plugins-official": true,
+    "next-steps@claude-community": true,
+    "audit-guard@danslab-mods": true,
+    "disk-floor@danslab-mods": true,
+    "fleet-pulse@danslab-mods": true,
+    "fleet-safety@danslab-mods": true,
+    "git-board@danslab-mods": true,
+    "handoff@danslab-mods": true,
+    "media-credit-guard@danslab-mods": true,
+    "routing-guard@danslab-mods": true,
+    "secret-shield@danslab-mods": true,
+    "token-budget@danslab-mods": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ffprobe *)",
+      "Bash(npx hyperframes *)",
+      "mcp__higgsfield__job_display",
+      "mcp__higgsfield__jobs_wait",
+      "mcp__higgsfield__show_generations",
+      "mcp__higgsfield__show_generation_by_ids",
+      "mcp__higgsfield__show_medias",
+      "mcp__higgsfield__show_reference_elements"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

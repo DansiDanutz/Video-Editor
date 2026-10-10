@@ -1,0 +1,27 @@
+# deps / build
+node_modules/
+dist/
+.cache/
+__pycache__/
+.venv/
+
+# media and renders
+out/
+renders/
+exports/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.aif
+*.aiff
+*.prores
+*.mxf
+
+# local / secrets
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+.DS_Store
