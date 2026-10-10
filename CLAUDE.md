@@ -19,4 +19,5 @@ Layout: `raw/` input clip, `transcript/` words.json + cuts.json, `scripts/` our 
 Flow: pick app -> connect -> WhisperX transcribe (venv `~/.cache/video-editor/whisperx-venv`, create once, never recreate; 3-5 GB, run `danslab-workflow check` first) -> write `transcript/cuts.json` -> user approves -> build cut as real trimmable clips (never one flat clip) -> verify frame counts vs cuts.json.
 Premiere connector: clone hetpatel-11/Adobe_Premiere_Pro_MCP at v1.2.3 (12684e3) into `vendor/premiere-mcp`; never `npm install -g adobe-premiere-pro-mcp`. Resolve Studio 21.1+: File > Setup AI Assistants. Final Cut: FCPXML. CapCut/no app: single ffmpeg filtergraph, `-fps_mode passthrough`.
 Not covered by the starter: audio polish, grade, graphics, SFX, music, locked-spec export.
-Machine status (2026-10-10): ffmpeg, uv, git, Node 26, Python 3.11 present; WhisperX env not yet created.
+Machine status (2026-10-10): ffmpeg, uv, git, Node 26, Python 3.11 present. Connector + WhisperX are installed by `scripts/setup-premiere-whisperx.sh` (David runs it; disk-floor blocks agents).
+MCP: `premiere-pro` registered at local scope (`node vendor/premiere-mcp/dist/cli.js`, `PREMIERE_MCP_TELEMETRY=0`). The CEP bridge (`--install-cep`) is a separate step: it edits Adobe CEP debug settings and Claude Desktop config.
