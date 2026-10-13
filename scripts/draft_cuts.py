@@ -4,7 +4,7 @@ Every pause between words longer than MAX_PAUSE is shortened to KEEP_PAUSE (spli
 around the gap). Leading/trailing non-speech is kept unless --trim-ends is given.
 The output is a draft for approval; nothing is rendered.
 
-  python3 scripts/draft_cuts.py --fps 30 --duration 119 [--trim-ends]
+  python3 scripts/draft_cuts.py --fps 30 --duration 119 [--trim-ends] [--skip-pauses]
 """
 import argparse
 import json
@@ -65,17 +65,19 @@ def main() -> None:
     parser.add_argument("--fps", type=int, required=True)
     parser.add_argument("--duration", type=float, required=True, help="source duration in seconds")
     parser.add_argument("--trim-ends", action="store_true")
+    parser.add_argument("--approved", action="store_true", help="mark the cut list as approved by David")
+    parser.add_argument("--skip-pauses", action="store_true", help="leave pauses untouched")
     args = parser.parse_args()
 
     data = json.loads(WORDS_PATH.read_text())
     total = to_frame(args.duration, args.fps)
-    removals = find_removals(data["words"], args.fps)
+    removals = [] if args.skip_pauses else find_removals(data["words"], args.fps)
     if args.trim_ends:
         removals = removals + end_removals(data["words"], args.fps, total)
     keeps = keep_ranges(removals, total)
     kept = sum(k["end_frame"] - k["start_frame"] for k in keeps)
     cuts = {
-        "status": "draft",
+        "status": "approved" if args.approved else "draft",
         "source": data["source"],
         "fps": args.fps,
         "source_frames": total,
