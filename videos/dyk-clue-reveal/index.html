@@ -1,0 +1,204 @@
+<!doctype html>
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"clue_number","type":"number","label":"Clue number","default":1,"min":1,"max":9,"step":1},
+    {"id":"clue_total","type":"number","label":"Clue total","default":3,"min":1,"max":9,"step":1},
+    {"id":"clue_text","type":"string","label":"Clue text (*word* = amber emphasis)","default":"The Antarctic Treaty of 1959 froze every territorial claim — but never *cancelled* them."}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ink: #06080d;
+        --deep: #0d1422;
+        --fog: #1b2638;
+        --paper: #ece6d8;
+        --muted: #7d8799;
+        --amber: #f2b33d;
+        --red: #d6453d;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+      #scene { position: absolute; inset: 0; }
+      .bg { position: absolute; inset: 0; }
+      #bg-grad { background: radial-gradient(ellipse at 50% 50%, var(--deep) 0%, var(--ink) 78%); }
+      #bg-grid {
+        opacity: 0.45;
+        background-image:
+          linear-gradient(to right, var(--fog) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--fog) 1px, transparent 1px);
+        background-size: 120px 120px;
+        -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 10%, transparent 70%);
+        mask-image: radial-gradient(ellipse at 50% 50%, #000 10%, transparent 70%);
+      }
+      #bg-vig {
+        background: radial-gradient(ellipse at 50% 50%, transparent 38%, var(--ink) 100%);
+        opacity: 0.6;
+      }
+      #bg-grain {
+        opacity: 0.07;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.2 -0.1'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+      }
+      #fogline {
+        position: absolute; left: 0; top: 539px; width: 1920px; height: 2px;
+        background: linear-gradient(to right, transparent, var(--muted) 30%, var(--paper) 50%, var(--muted) 70%, transparent);
+      }
+      #push { position: absolute; inset: 0; transform-origin: 50% 50%; }
+      #shake { position: absolute; inset: 0; }
+      #card {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 44px; padding: 120px 160px;
+      }
+      #stamp-wrap { position: relative; }
+      #stamp {
+        font-family: "IBM Plex Mono", monospace; font-weight: 700; text-transform: uppercase;
+        font-size: 64px; letter-spacing: 0.18em; line-height: 1;
+        color: var(--red); border: 7px solid var(--red); border-radius: 6px;
+        padding: 16px 40px 16px 52px; /* right padding offsets trailing letter-space */
+        white-space: nowrap;
+      }
+      #ring {
+        position: absolute; inset: -4px; border: 5px solid var(--red); border-radius: 10px;
+        opacity: 0; pointer-events: none;
+      }
+      #pips { display: flex; gap: 20px; align-items: center; height: 24px; }
+      .pip { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--muted); }
+      .pip.on { background: var(--amber); border-color: var(--amber); }
+      #clue {
+        max-width: 1500px; text-align: center; text-transform: uppercase;
+        font-family: "League Gothic", sans-serif; font-weight: 400;
+        line-height: 0.95; letter-spacing: 0.01em; color: var(--paper);
+      }
+      .w { display: inline-block; margin: 0 0.12em; }
+      .w.em { color: var(--amber); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="main" data-start="0" data-duration="5" data-fps="30" data-width="1920" data-height="1080">
+      <div id="scene">
+        <div class="bg" id="bg-grad"></div>
+        <div class="bg" id="bg-grid"></div>
+        <div class="bg" id="bg-vig"></div>
+        <div class="bg" id="bg-grain"></div>
+        <div id="push">
+          <div id="shake">
+            <div id="card">
+              <div id="stamp-wrap">
+                <div id="stamp" data-layout-allow-overflow="true"></div>
+                <div id="ring"></div>
+              </div>
+              <div id="pips"></div>
+              <div id="clue"></div>
+            </div>
+          </div>
+        </div>
+        <div id="fogline" data-layout-allow-overflow="true"></div>
+      </div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const vars = window.__hyperframes.getVariables();
+      const total = Math.max(1, Math.round(Number(vars.clue_total) || 3));
+      const num = Math.min(total, Math.max(1, Math.round(Number(vars.clue_number) || 1)));
+      const rawText = String(vars.clue_text || "");
+
+      // Label
+      document.getElementById("stamp").textContent = "Clue " + num + "/" + total;
+
+      // Pips
+      const pipsEl = document.getElementById("pips");
+      for (let i = 0; i < total; i++) {
+        const p = document.createElement("span");
+        p.className = "pip" + (i < num ? " on" : "");
+        p.id = "pip" + i;
+        pipsEl.appendChild(p);
+      }
+
+      // Clue words with *emphasis*
+      const clueEl = document.getElementById("clue");
+      const plain = rawText.replace(/\*/g, "");
+      const size = plain.length <= 50 ? 120 : plain.length <= 90 ? 100 : plain.length <= 140 ? 86 : 76;
+      clueEl.style.fontSize = size + "px";
+      let emph = false;
+      rawText.split(/\s+/).filter(Boolean).forEach((tok) => {
+        let isEm = emph;
+        for (const ch of tok) {
+          if (ch === "*") {
+            emph = !emph;
+            if (emph) isEm = true;
+          }
+        }
+        const clean = tok.replace(/\*/g, "");
+        if (clean) {
+          const s = document.createElement("span");
+          s.className = "w" + (isEm ? " em" : "");
+          s.textContent = clean;
+          clueEl.appendChild(s);
+        }
+      });
+      const words = Array.from(clueEl.children);
+      const emWords = words.filter((w) => w.classList.contains("em"));
+
+      // Amber as rgb for glow strings
+      const hex = getComputedStyle(document.documentElement).getPropertyValue("--amber").trim().replace("#", "");
+      const rgb = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
+      const glow = (a, r) => "0 0 " + r + "px rgba(" + rgb + "," + a + ")";
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Slow push-in (whole piece)
+      tl.fromTo("#push", { scale: 1 }, { scale: 1.05, duration: 5, ease: "none" }, 0);
+
+      // 0.0-0.5 fog line sweep
+      tl.fromTo("#fogline", { x: -1920, autoAlpha: 0.9 }, { x: 1920, autoAlpha: 0, duration: 0.5, ease: "power2.inOut" }, 0.05);
+
+      // 0.3-0.9 stamp slam
+      tl.fromTo("#stamp", { autoAlpha: 0, scale: 1.6, rotation: -4 },
+        { autoAlpha: 1, scale: 1, rotation: -4, duration: 0.4, ease: "back.out(1.6)" }, 0.3);
+      tl.set("#ring", { autoAlpha: 0 }, 0);
+      tl.fromTo("#ring", { autoAlpha: 0.9, scale: 1 }, { autoAlpha: 0, scale: 1.35, duration: 0.3, ease: "expo.out", immediateRender: false }, 0.7);
+      // deterministic 3-frame shake (30fps => 1/30s steps)
+      const f = 1 / 30;
+      tl.set("#shake", { x: 10, y: -6 }, 0.7);
+      tl.set("#shake", { x: -8, y: 5 }, 0.7 + f);
+      tl.set("#shake", { x: 4, y: -2 }, 0.7 + 2 * f);
+      tl.set("#shake", { x: 0, y: 0 }, 0.7 + 3 * f);
+
+      // 0.9-1.3 pips
+      tl.fromTo(".pip", { autoAlpha: 0, scale: 0.3 },
+        { autoAlpha: 1, scale: 1, duration: 0.25, ease: "back.out(2)", stagger: Math.min(0.05, 0.15 / Math.max(1, total - 1)) }, 0.9);
+      const cur = "#pip" + (num - 1);
+      tl.to(cur, { scale: 1.45, duration: 0.45, ease: "sine.inOut", yoyo: true, repeat: 7 }, 1.3);
+
+      // 1.1-2.6 words
+      const stagger = words.length > 1 ? Math.min(0.06, 1.1 / (words.length - 1)) : 0;
+      tl.fromTo(words, { autoAlpha: 0, y: 18, filter: "blur(8px)" },
+        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.4, ease: "power2.out", stagger }, 1.1);
+      const lastIn = 1.1 + stagger * Math.max(0, words.length - 1) + 0.4;
+      if (emWords.length) {
+        tl.fromTo(emWords, { textShadow: glow(0, 0) },
+          { textShadow: glow(0.65, 34), duration: 0.5, ease: "power2.out" }, Math.min(lastIn, 2.2));
+        // 2.6-5.0 breathing glow: 2 beats
+        tl.to(emWords, { textShadow: glow(0.3, 14), duration: 0.6, ease: "sine.inOut" }, 2.6);
+        tl.to(emWords, { textShadow: glow(0.75, 42), duration: 0.6, ease: "sine.inOut" }, 3.2);
+        tl.to(emWords, { textShadow: glow(0.3, 14), duration: 0.6, ease: "sine.inOut" }, 3.8);
+        tl.to(emWords, { textShadow: glow(0.75, 42), duration: 0.6, ease: "sine.inOut" }, 4.4);
+      }
+
+      // 2.6-5.0 heartbeat vignette: tightens/relaxes, 2 beats
+      [2.6, 3.8].forEach((t) => {
+        tl.to("#bg-vig", { opacity: 0.95, scale: 1.0, duration: 0.5, ease: "power2.in" }, t);
+        tl.to("#bg-vig", { opacity: 0.6, duration: 0.7, ease: "sine.out" }, t + 0.5);
+      });
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

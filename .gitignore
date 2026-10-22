@@ -32,3 +32,6 @@ raw/*
 vendor/*
 !vendor/.gitkeep
 transcript/words.json
+
+# HyperFrames proof snapshots
+videos/*/snapshots/
